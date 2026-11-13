@@ -1,0 +1,165 @@
+[
+  {
+    "question_id": "q_attn_01",
+    "question": "What scaling factor is applied to the dot products in Scaled Dot-Product Attention, and why?",
+    "expected_answer": "A scaling factor of 1 / sqrt(d_k) is applied. This counteracts the effect of large dot products pushing the softmax function into regions with extremely small gradients when d_k is large.",
+    "expected_papers": ["1706.03762v7"],
+    "expected_pages": [4],
+    "should_refuse": false,
+    "grading_notes": "Must mention 1/sqrt(d_k) and counteracting small softmax gradients. Must cite arXiv:1706.03762v7 p.4."
+  },
+  {
+    "question_id": "q_attn_02",
+    "question": "How many layers and attention heads are in the base Transformer encoder model, and what is the dimensionality of d_model?",
+    "expected_answer": "The base Transformer encoder consists of N = 6 identical layers, each with h = 8 parallel attention heads, and an embedding dimension of d_model = 512.",
+    "expected_papers": ["1706.03762v7"],
+    "expected_pages": [3, 5],
+    "should_refuse": false,
+    "grading_notes": "Must cite N=6, h=8, d_model=512 from page 3 or 5 of 1706.03762v7."
+  },
+  {
+    "question_id": "q_attn_03",
+    "question": "What mathematical function is used for positional encodings in the Transformer, and what are their specific frequencies?",
+    "expected_answer": "Positional encodings use sine and cosine functions of varying frequencies: PE(pos, 2i) = sin(pos / 10000^(2i/d_model)) and PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model)).",
+    "expected_papers": ["1706.03762v7"],
+    "expected_pages": [6],
+    "should_refuse": false,
+    "grading_notes": "Must cite sine/cosine and 10000^(2i/d_model) from page 6 of 1706.03762v7."
+  },
+  {
+    "question_id": "q_attn_04",
+    "question": "What BLEU score did the Transformer big model achieve on the WMT 2014 English-to-German translation task?",
+    "expected_answer": "The Transformer (big) model achieved a BLEU score of 28.4 on the WMT 2014 English-to-German translation task.",
+    "expected_papers": ["1706.03762v7"],
+    "expected_pages": [8],
+    "should_refuse": false,
+    "grading_notes": "Must specify 28.4 BLEU and cite page 8 or Table 2 of 1706.03762v7."
+  },
+  {
+    "question_id": "q_moshi_01",
+    "question": "What is the Mimi neural audio codec's sampling rate, frame rate, and bitrate in Moshi?",
+    "expected_answer": "The Mimi neural audio codec processes 24 kHz audio into representations with a frame rate of 12.5 Hz and an overall bitrate of 1.1 kbps.",
+    "expected_papers": ["2410.00037v1"],
+    "expected_pages": [2, 8],
+    "should_refuse": false,
+    "grading_notes": "Must specify 24 kHz, 12.5 Hz frame rate, and 1.1 kbps bitrate with citation to 2410.00037v1."
+  },
+  {
+    "question_id": "q_moshi_02",
+    "question": "What theoretical overall latency does Moshi achieve, and what is its frame size?",
+    "expected_answer": "Moshi achieves a theoretical overall latency of 160 ms with a frame size of 80 ms.",
+    "expected_papers": ["2410.00037v1"],
+    "expected_pages": [2, 8],
+    "should_refuse": false,
+    "grading_notes": "Must mention 160 ms latency and 80 ms frame size from page 2 or 8 of 2410.00037v1."
+  },
+  {
+    "question_id": "q_moshi_03",
+    "question": "How many parameters does the Moshi foundation model contain and what is its text backbone architecture?",
+    "expected_answer": "Moshi contains 7.5 billion parameters and is built upon the Helium 7B text foundation model backbone.",
+    "expected_papers": ["2410.00037v1"],
+    "expected_pages": [2, 9],
+    "should_refuse": false,
+    "grading_notes": "Must cite 7.5B parameters and Helium 7B text model from 2410.00037v1."
+  },
+  {
+    "question_id": "q_moshi_04",
+    "question": "What synthetic multi-stream dialogue dataset was generated to train Moshi, and how many hours does it contain?",
+    "expected_answer": "Moshi utilized a synthetic conversational multi-stream audio dataset comprising approximately 170,000 hours of multi-stream spoken dialogue.",
+    "expected_papers": ["2410.00037v1"],
+    "expected_pages": [13],
+    "should_refuse": false,
+    "grading_notes": "Must cite synthetic dialogue dataset and ~170,000 hours from 2410.00037v1."
+  },
+  {
+    "question_id": "q_chunk_01",
+    "question": "What is the primary motivation for dynamic chunking compared to static chunking in hierarchical sequence modeling?",
+    "expected_answer": "Static chunking partitions sequences at arbitrary, fixed token boundaries, frequently bisecting coherent linguistic or semantic units. Dynamic chunking learns adaptive boundary predictions conditioned on content semantics.",
+    "expected_papers": ["2507.07955v2"],
+    "expected_pages": [1, 2],
+    "should_refuse": false,
+    "grading_notes": "Must contrast fixed arbitrary boundary splitting with adaptive semantic boundary learning from 2507.07955v2."
+  },
+  {
+    "question_id": "q_chunk_02",
+    "question": "How does the boundary predictor in dynamic chunking determine where a segment ends?",
+    "expected_answer": "The boundary predictor uses a lightweight neural module that outputs a boundary probability score p_t in [0, 1] at each step, emitting a chunk boundary when the score exceeds a threshold or sampling criterion.",
+    "expected_papers": ["2507.07955v2"],
+    "expected_pages": [3, 4],
+    "should_refuse": false,
+    "grading_notes": "Must cite boundary scoring probability p_t from Section 2 of 2507.07955v2."
+  },
+  {
+    "question_id": "q_chunk_03",
+    "question": "What pooling mechanism is applied within each predicted dynamic chunk to form higher-level representations?",
+    "expected_answer": "An attention pooling or weighted mean pooling operation aggregates the variable-length tokens inside each dynamic chunk into a single condensed vector representation for the upper hierarchical layer.",
+    "expected_papers": ["2507.07955v2"],
+    "expected_pages": [4, 5],
+    "should_refuse": false,
+    "grading_notes": "Must mention attention/weighted pooling over within-chunk tokens from 2507.07955v2."
+  },
+  {
+    "question_id": "q_chunk_04",
+    "question": "What computational complexity reduction does dynamic chunking provide over full self-attention on long sequences?",
+    "expected_answer": "Full self-attention scales quadratically as O(T^2). Dynamic chunking reduces sequence length by factor B, yielding two-level hierarchical complexity of O(T*B + (T/B)^2), which is sub-quadratic for large sequence lengths T.",
+    "expected_papers": ["2507.07955v2"],
+    "expected_pages": [2, 6],
+    "should_refuse": false,
+    "grading_notes": "Must cite reduction from O(T^2) to hierarchical sub-quadratic complexity from 2507.07955v2."
+  },
+  {
+    "question_id": "q_cross_01",
+    "question": "How does the attention mechanism in the original Transformer (1706.03762v7) compare with the hierarchical attention used in Dynamic Chunking (2507.07955v2) in terms of sequence scaling?",
+    "expected_answer": "The original Transformer computes global pairwise dot-product attention across all tokens with O(N^2) complexity [arXiv:1706.03762v7, p.4]. Dynamic Chunking partitions tokens into adaptive chunks and executes local within-chunk attention followed by coarser cross-chunk attention, reducing complexity on long sequences [arXiv:2507.07955v2, p.2].",
+    "expected_papers": ["1706.03762v7", "2507.07955v2"],
+    "expected_pages": [4, 2],
+    "should_refuse": false,
+    "grading_notes": "Must compare global O(N^2) pairwise attention in 1706.03762 with two-level chunked attention in 2507.07955."
+  },
+  {
+    "question_id": "q_cross_02",
+    "question": "Compare how Moshi (2410.00037v1) handles temporal continuous streaming with the full-sequence bidirectional attention used in the original Transformer encoder (1706.03762v7).",
+    "expected_answer": "The original Transformer encoder uses unconstrained bidirectional self-attention requiring the complete input sequence upfront [arXiv:1706.03762v7, p.2]. Moshi uses causal autoregressive self-attention over streaming acoustic and text tokens with an 80ms frame rate to enable low-latency, full-duplex dialogue [arXiv:2410.00037v1, p.2].",
+    "expected_papers": ["1706.03762v7", "2410.00037v1"],
+    "expected_pages": [2, 2],
+    "should_refuse": false,
+    "grading_notes": "Must contrast full bidirectional sequence access with causal streaming frames for low latency."
+  },
+  {
+    "question_id": "q_cross_03",
+    "question": "How do Moshi (2410.00037v1) and Dynamic Chunking (2507.07955v2) address the challenge of processing continuous high-rate sequence frames?",
+    "expected_answer": "Moshi employs a neural audio codec (Mimi) to downsample 24 kHz raw waveform into discrete 12.5 Hz acoustic tokens [arXiv:2410.00037v1, p.8]. Dynamic Chunking uses an adaptive boundary predictor to compress variable-length token spans into pooled hierarchical chunk embeddings [arXiv:2507.07955v2, p.4]. Both achieve compression of high-rate sequences, but Mimi uses fixed frame neural quantization while Dynamic Chunking uses adaptive semantic boundary pooling.",
+    "expected_papers": ["2410.00037v1", "2507.07955v2"],
+    "expected_pages": [8, 4],
+    "should_refuse": false,
+    "grading_notes": "Must contrast Mimi neural acoustic compression with adaptive semantic chunk pooling."
+  },
+  {
+    "question_id": "q_unsupp_01",
+    "question": "What is the learning rate schedule and batch size used for pretraining DeepSeek-R1?",
+    "expected_answer": "REFUSAL: DeepSeek-R1 is not discussed in the provided 3-paper library.",
+    "expected_papers": [],
+    "expected_pages": [],
+    "should_refuse": true,
+    "grading_notes": "System must refuse. Answering or hallucinating training hyperparameters is an error."
+  },
+  {
+    "question_id": "q_unsupp_02",
+    "question": "What is the crystal structure and resolution of AlphaFold 3's biomolecular prediction for RNA complexes?",
+    "expected_answer": "REFUSAL: AlphaFold 3 and RNA crystal structures are not in the provided library.",
+    "expected_papers": [],
+    "expected_pages": [],
+    "should_refuse": true,
+    "grading_notes": "System must refuse. The 3 papers cover Transformer, Moshi, and Dynamic Chunking."
+  },
+  {
+    "question_id": "q_unsupp_03",
+    "question": "What convolutional filter sizes are used in the ResNet-50 residual blocks for ImageNet classification?",
+    "expected_answer": "REFUSAL: ResNet-50 and ImageNet convolutional architectures are outside the library.",
+    "expected_papers": [],
+    "expected_pages": [],
+    "should_refuse": true,
+    "grading_notes": "System must refuse. ResNet-50 is not discussed in the library."
+  }
+]
+

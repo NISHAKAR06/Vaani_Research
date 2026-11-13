@@ -1,0 +1,29 @@
+# Stand-in Model Service Default Configuration
+# Calibrated against real Groq measurements
+
+service:
+  host: "127.0.0.1"
+  port: 8001
+  model_id: "llama-3.3-70b-versatile-standin"
+
+timing:
+  base_latency_ms: 380.0
+  latency_jitter_ms: 110.0
+  first_token_latency_ms: 180.0
+  streaming_chunk_delay_ms: 15.0
+  overload_latency_multiplier: 1.85
+
+quotas:
+  rate_limit_rpm: 30
+  rate_limit_tpm: 6000
+  daily_request_budget: 1000
+  daily_token_budget: 100000
+  max_concurrency: 5
+
+fault_injection:
+  failure_probability: 0.04
+  timeout_probability: 0.02
+  http_429_retry_after_seconds: 5
+
+seed: 42
+

@@ -103,6 +103,15 @@ class AdmissionController:
             except Exception as e:
                 await asyncio.sleep(0.01)
 
+    @property
+    def current_queue_length(self) -> int:
+        return self.queue.qsize() + (1 if self._dispatcher_waiting_semaphore else 0)
+
+    @property
+    def active_concurrency(self) -> int:
+        # max_concurrency - available semaphore permits
+        return self.max_concurrency - getattr(self.semaphore, "_value", 0)
+
     def reset_stats(self):
         """Reset internal metrics."""
         self.peak_queue_length = 0
