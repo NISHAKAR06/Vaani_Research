@@ -111,8 +111,8 @@ class SimulatorProvider(ModelProvider):
                     total_tokens=usage_raw.get("total_tokens", 0)
                 )
 
-                # For stand-in, approximate first token as ~45% of total
-                first_token_ms = round(total_elapsed_ms * 0.45, 2)
+                # For non-streaming requests, first token arrives with response completion
+                first_token_ms = round(total_elapsed_ms, 2)
 
                 return ProviderResponse(
                     content=content,

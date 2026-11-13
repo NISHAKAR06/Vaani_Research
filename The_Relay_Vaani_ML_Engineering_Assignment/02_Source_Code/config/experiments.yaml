@@ -1,0 +1,64 @@
+# Configuration for Retrieval Settings and Load Experiments
+
+retrieval_settings:
+  A:
+    name: "Setting A"
+    chunk_size_tokens: 300
+    chunk_overlap_tokens: 50
+    top_k: 3
+    rerank: false
+    description: "Compact chunks (300 tokens), top-3 retrieval, no cross-encoder re-ranking"
+  B:
+    name: "Setting B"
+    chunk_size_tokens: 600
+    chunk_overlap_tokens: 100
+    top_k: 5
+    rerank: false
+    description: "Medium chunks (600 tokens), top-5 retrieval, no cross-encoder re-ranking"
+  C:
+    name: "Setting C"
+    chunk_size_tokens: 900
+    chunk_overlap_tokens: 150
+    top_k: 5
+    rerank: true
+    description: "Large chunks (900 tokens), top-5 retrieval with cross-encoder re-ranking"
+
+load_scenarios:
+  steady:
+    name: "Steady"
+    description: "Constant request rate within rate limits"
+    offered_rate_rpm: 15
+    duration_seconds: 40
+    requests_total: 10
+    concurrency: 2
+  burst:
+    name: "Burst"
+    description: "Sudden spike of concurrent requests"
+    offered_rate_rpm: 60
+    duration_seconds: 15
+    requests_total: 15
+    concurrency: 10
+  sustained_overload:
+    name: "Sustained overload"
+    description: "Continuous request volume exceeding capacity"
+    offered_rate_rpm: 90
+    duration_seconds: 30
+    requests_total: 25
+    concurrency: 12
+  per_minute_halved:
+    name: "Per-minute limit halved"
+    description: "Operating under throttled RPM limit"
+    offered_rate_rpm: 30
+    duration_seconds: 25
+    requests_total: 12
+    concurrency: 5
+    simulator_override_rpm: 10
+  daily_budget_exhausted:
+    name: "Daily budget exhausted"
+    description: "Requests sent after provider daily quota is depleted"
+    offered_rate_rpm: 20
+    duration_seconds: 15
+    requests_total: 10
+    concurrency: 3
+    simulator_override_daily_budget: 0
+

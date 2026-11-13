@@ -80,7 +80,7 @@ async def evaluate_retrieval_settings(provider_source: str = "stand-in"):
             # Log to JSONL
             tracer.log_request_event(
                 request_id=resp.request_id,
-                scenario="steady",
+                scenario="retrieval_eval",
                 source=provider_source,
                 start_time_iso=start_iso,
                 first_token_ms=resp.first_token_ms,

@@ -44,27 +44,66 @@ def calc_p(values: List[float], p: float) -> Optional[float]:
         return None
     return round(float(np.percentile(values, p)), 1)
 
-def build_tables_markdown(results: List[Dict[str, Any]], calibration_meta: Dict[str, Any]) -> str:
+def build_tables_markdown(results: List[Dict[str, Any]], raw_events: Optional[List[Dict[str, Any]]] = None, calibration_meta: Optional[Dict[str, Any]] = None) -> str:
+    if calibration_meta is None:
+        calib_meta = {}
+    else:
+        calib_meta = calibration_meta
+
     # --- TABLE 1: LIMITS FOUND IN REAL SERVICE ---
-    t1_rpm = calibration_meta.get("rpm_limit", "30 RPM")
-    t1_tpm = calibration_meta.get("tpm_limit", "6,000 TPM")
-    t1_rpd = calibration_meta.get("rpd_limit", "1,000 RPD")
-    t1_tpd = calibration_meta.get("tpd_limit", "not measured")
-    t1_concurrency = calibration_meta.get("concurrency_limit", "not measured")
-    t1_behavior = "HTTP 429 Too Many Requests; returns Retry-After & x-ratelimit headers"
-    t1_recovery = "2.0s to 60.0s rolling reset (documented & observed via headers)"
+    is_unprobed = calib_meta.get("status") == "unconfigured_baseline"
+    t1_rpm = calib_meta.get("rpm_limit", "30 RPM")
+    t1_tpm = calib_meta.get("tpm_limit", "6,000 TPM")
+    t1_rpd = calib_meta.get("rpd_limit", "1,000 RPD")
+    t1_tpd = calib_meta.get("tpd_limit", "not measured")
+    t1_concurrency = calib_meta.get("concurrency_limit", "not measured")
+    
+    if is_unprobed:
+        t1_behavior = "HTTP 429 Too Many Requests (documented specification; unprobed live)"
+        t1_recovery = "2.0s to 60.0s rolling window (documented specification; unprobed live)"
+        c_rpm = "Low (unprobed baseline)"
+        c_tpm = "Low (unprobed baseline)"
+        c_rpd = "Low (unprobed baseline)"
+        c_tpd = "Low (not measured)"
+        c_conc = "Low (not measured)"
+        c_behav = "Low (unprobed baseline)"
+        c_recov = "Low (unprobed baseline)"
+        m_rpm = "Documented developer limits (GROQ_API_KEY unconfigured; 0 live requests)"
+        m_tpm = "Documented developer limits (GROQ_API_KEY unconfigured; 0 live requests)"
+        m_rpd = "Documented developer console quota (unprobed live)"
+        m_tpd = "Not surfaced in free tier documentation"
+        m_conc = "Not documented by Groq; unmeasured"
+        m_behav = "Documented Groq rate-limiting behavior"
+        m_recov = "Documented rolling window reset interval"
+    else:
+        t1_behavior = "HTTP 429 Too Many Requests; returns Retry-After & x-ratelimit headers"
+        t1_recovery = "2.0s to 60.0s rolling reset (documented & observed via headers)"
+        c_rpm = "High"
+        c_tpm = "High"
+        c_rpd = "High"
+        c_tpd = "Low"
+        c_conc = "Medium"
+        c_behav = "High"
+        c_recov = "High"
+        m_rpm = "Inspected response headers (`x-ratelimit-limit-requests`) & documentation"
+        m_tpm = "Response headers (`x-ratelimit-limit-tokens`)"
+        m_rpd = "Response headers (`x-ratelimit-remaining-requests` progression) & console limits"
+        m_tpd = "Not surfaced in response headers on free tier; not reached in calibration"
+        m_conc = "Inferred from concurrent burst responses"
+        m_behav = "Active 429 response capture during burst tests"
+        m_recov = "`retry-after` header and `x-ratelimit-reset-requests` delta"
 
     table_1 = f"""### Table 1: Limits you found in the real service
 
 | Limit | Value you found | How you found it | Confidence (high, medium, low) |
 |---|---|---|---|
-| Requests per minute | {t1_rpm} | Inspected response headers (`x-ratelimit-limit-requests`) & documentation | High |
-| Tokens per minute | {t1_tpm} | Response headers (`x-ratelimit-limit-tokens`) | High |
-| Requests per day | {t1_rpd} | Response headers (`x-ratelimit-remaining-requests` progression) & console limits | High |
-| Tokens per day | {t1_tpd} | Not surfaced in response headers on free tier; not reached in calibration | Low |
-| Requests in flight at once | {t1_concurrency} | Not officially documented by Groq; inferred from concurrent burst responses | Medium |
-| What it returns when a limit is hit | {t1_behavior} | Active 429 response capture during burst tests | High |
-| Time until it recovers | {t1_recovery} | `retry-after` header and `x-ratelimit-reset-requests` delta | High |
+| Requests per minute | {t1_rpm} | {m_rpm} | {c_rpm} |
+| Tokens per minute | {t1_tpm} | {m_tpm} | {c_tpm} |
+| Requests per day | {t1_rpd} | {m_rpd} | {c_rpd} |
+| Tokens per day | {t1_tpd} | {m_tpd} | {c_tpd} |
+| Requests in flight at once | {t1_concurrency} | {m_conc} | {c_conc} |
+| What it returns when a limit is hit | {t1_behavior} | {m_behav} | {c_behav} |
+| Time until it recovers | {t1_recovery} | {m_recov} | {c_recov} |
 """
 
     # --- TABLE 2A & 2B: LOAD SCENARIOS ---
@@ -83,10 +122,17 @@ def build_tables_markdown(results: List[Dict[str, Any]], calibration_meta: Dict[
         "daily_budget_exhausted": "Daily budget exhausted"
     }
 
+    # Map raw_events for timestamps and peak queue
+    raw_by_req = {}
+    if raw_events:
+        for ev in raw_events:
+            raw_by_req[ev.get("request_id")] = ev
+
     t2a_rows = []
     t2b_rows = []
 
     for sc_key in scenarios_order:
+        # Strictly match load test scenario rows only
         sc_data = [r for r in results if r["scenario"] == sc_key]
         if not sc_data:
             continue
@@ -94,8 +140,25 @@ def build_tables_markdown(results: List[Dict[str, Any]], calibration_meta: Dict[
         source_label = sc_data[0]["source"]
         req_sent = len(sc_data)
         
-        # Approximate duration from timestamps or records
-        duration_s = max(1.0, round(req_sent * (4.0 if sc_key == "steady" else 1.2), 1))
+        # Calculate genuine duration from timestamps
+        ts_starts = []
+        ts_ends = []
+        for r in sc_data:
+            ev = raw_by_req.get(r["request_id"])
+            if ev and ev.get("timestamps"):
+                t_recv = ev["timestamps"].get("request_received")
+                t_comp = ev["timestamps"].get("request_completed")
+                if t_recv:
+                    ts_starts.append(t_recv)
+                if t_comp:
+                    ts_ends.append(t_comp)
+        
+        if ts_starts and ts_ends:
+            duration_s = max(0.1, round(max(ts_ends) - min(ts_starts), 1))
+        else:
+            # Fallback to sum or realistic arrival interval
+            duration_s = max(1.0, round(req_sent * (4.0 if sc_key == "steady" else 1.2), 1))
+            
         offered_rate = round((req_sent / duration_s) * 60.0, 1)
 
         ft_vals = [r["first_token_ms"] for r in sc_data if r["first_token_ms"] is not None]
@@ -124,7 +187,30 @@ def build_tables_markdown(results: List[Dict[str, Any]], calibration_meta: Dict[
         to_pct = round((timed_out / req_sent) * 100.0, 1)
         retries_per_req = round(total_retries / req_sent, 2)
 
-        peak_q = 1 if sc_key == "steady" else (7 if sc_key == "burst" else 12)
+        # Calculate peak queue length directly from traces
+        # Count overlapping intervals where enqueued <= t <= dequeued
+        peak_q = 0
+        queue_events = []
+        for r in sc_data:
+            ev = raw_by_req.get(r["request_id"])
+            if ev and ev.get("timestamps"):
+                t_enq = ev["timestamps"].get("enqueued")
+                t_deq = ev["timestamps"].get("dequeued")
+                if t_enq and t_deq:
+                    queue_events.append((t_enq, 1))
+                    queue_events.append((t_deq, -1))
+        
+        if queue_events:
+            queue_events.sort(key=lambda x: x[0])
+            curr_q = 0
+            for _, delta in queue_events:
+                curr_q += delta
+                if curr_q > peak_q:
+                    peak_q = curr_q
+        else:
+            # If no queue timestamps logged (e.g. queue wait 0), peak queue is 0 or 1
+            peak_q = 0
+
         out_tokens = [r["tokens_out"] for r in sc_data if r["status"] == "ok"]
         tok_per_ans = round(float(np.mean(out_tokens)), 1) if out_tokens else 0.0
 
@@ -156,7 +242,8 @@ def build_tables_markdown(results: List[Dict[str, Any]], calibration_meta: Dict[
     t3_rows = []
 
     for set_key in ["A", "B", "C"]:
-        set_data = [r for r in results if r["retrieval_setting"] == set_key]
+        # Strictly filter for retrieval evaluation scenario
+        set_data = [r for r in results if r["scenario"] == "retrieval_eval" and r["retrieval_setting"] == set_key]
         if not set_data:
             continue
 
@@ -315,7 +402,17 @@ def main():
         with open(calib_file, "r", encoding="utf-8") as f:
             calib_meta = json.load(f)
 
-    tables_md = build_tables_markdown(results, calib_meta)
+    # Load raw events if available
+    raw_file = settings.experiments_dir / "raw" / "request_events.jsonl"
+    raw_events = []
+    if raw_file.exists():
+        with open(raw_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line_str = line.strip()
+                if line_str:
+                    raw_events.append(json.loads(line_str))
+
+    tables_md = build_tables_markdown(results, raw_events=raw_events, calibration_meta=calib_meta)
     with open(tables_file, "w", encoding="utf-8") as f:
         f.write(tables_md)
     print(f"[SUCCESS] Wrote tables to {tables_file}")

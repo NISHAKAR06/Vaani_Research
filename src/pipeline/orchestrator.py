@@ -218,6 +218,7 @@ class PipelineOrchestrator:
                 # TTFT from user request perspective: queue + retrieval + provider first token
                 first_token_ms = round(retrieval_duration_ms + provider_resp.first_token_latency_ms, 2)
 
+            timestamps.final_response_chunk = time.time()
             final_answer = provider_resp.content
 
             # === STAGE 5: CITATION VERIFICATION ===
@@ -246,7 +247,16 @@ class PipelineOrchestrator:
                     stage_history.append("Stage 5 Branch: Refinement exhausted -> Honest Refusal")
 
         timestamps.request_completed = time.time()
-        provider_duration_ms = (timestamps.request_completed - provider_start_time) * 1000.0
+        provider_duration_ms = (
+            (timestamps.final_response_chunk - timestamps.provider_started) * 1000.0
+            if timestamps.final_response_chunk and timestamps.provider_started
+            else (timestamps.request_completed - provider_start_time) * 1000.0
+        )
+        verif_duration_ms = (
+            (timestamps.verification_finished - verif_start) * 1000.0
+            if timestamps.verification_finished and "verif_start" in locals()
+            else 0.0
+        )
         total_time_ms = (timestamps.request_completed - timestamps.request_received) * 1000.0
 
         # Assess grade based on citation verification and content
@@ -272,7 +282,7 @@ class PipelineOrchestrator:
             total_ms=round(total_time_ms, 2),
             retrieval_ms=round(retrieval_duration_ms, 2),
             provider_ms=round(provider_duration_ms, 2),
-            verification_ms=round((timestamps.verification_finished - (timestamps.final_response_chunk or timestamps.provider_started)) * 1000.0, 2) if timestamps.verification_finished else 0.0,
+            verification_ms=round(verif_duration_ms, 2),
             citations=verif_result.citations_found,
             stage_history=stage_history,
             timestamps=timestamps

@@ -196,6 +196,7 @@ async def chat_completions(req: ChatCompletionRequest):
             headers=headers
         )
 
+    stream_started = False
     try:
         # 2. Fault Injection Check
         should_fault, fault_msg, status_code = load_controller.check_fault_injection()
@@ -213,12 +214,14 @@ async def chat_completions(req: ChatCompletionRequest):
 
         # 4. Handle Streaming vs Non-Streaming
         if req.stream:
+            stream_started = True
             return StreamingResponse(
                 stream_text_chunks(
                     full_text=content,
                     ttft_seconds=ttft_ms / 1000.0,
                     total_seconds=total_ms / 1000.0,
-                    model_id=req.model
+                    model_id=req.model,
+                    cleanup_callback=rate_limiter.release_concurrency
                 ),
                 media_type="text/event-stream"
             )
@@ -259,7 +262,8 @@ async def chat_completions(req: ChatCompletionRequest):
         )
 
     finally:
-        await rate_limiter.release_concurrency()
+        if not stream_started:
+            await rate_limiter.release_concurrency()
 
 if __name__ == "__main__":
     import uvicorn

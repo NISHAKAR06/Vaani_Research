@@ -1,0 +1,10 @@
+{
+  "service": "Stand-in Model Service",
+  "port": 8001,
+  "base_latency_ms": 380.0,
+  "latency_jitter_ms": 110.0,
+  "overload_multiplier": 1.85,
+  "rate_limit_rpm": 30,
+  "rate_limit_tpm": 6000,
+  "daily_budget": 1000
+}
