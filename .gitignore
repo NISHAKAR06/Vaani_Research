@@ -1,0 +1,33 @@
+# Environment variables & secrets
+.env
+*.env.local
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data & raw downloads
+papers/raw/*.pdf
+!papers/raw/.gitkeep
+papers/processed/*.bin
+papers/processed/*.faiss
+
+# Experiments runtime data
+experiments/raw/*.jsonl
+experiments/calibration/raw_events.jsonl
+
+# OS files
+.DS_Store
+Thumbs.db
+

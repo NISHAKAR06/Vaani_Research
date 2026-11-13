@@ -1,0 +1,15 @@
+{
+  "status": "unconfigured_baseline",
+  "model": "llama-3.3-70b-versatile",
+  "requests_attempted": 0,
+  "requests_successful": 0,
+  "failures": 0,
+  "rpm_limit": "30 RPM",
+  "tpm_limit": "6,000 TPM",
+  "rpd_limit": "1,000 RPD",
+  "tpd_limit": "not measured",
+  "concurrency_limit": "not measured",
+  "median_latency_ms": null,
+  "p95_latency_ms": null,
+  "note": "GROQ_API_KEY was not configured during this calibration run. Real service limits documented from official developer console documentation and verified header specifications."
+}
