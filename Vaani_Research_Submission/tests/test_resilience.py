@@ -49,3 +49,4 @@ def test_retry_policy_exponential_backoff_and_jitter():
     delay_1 = policy.calculate_delay(current_attempt=1)
     assert 0.9 <= delay_0 <= 1.1
     assert 1.8 <= delay_1 <= 2.2
+

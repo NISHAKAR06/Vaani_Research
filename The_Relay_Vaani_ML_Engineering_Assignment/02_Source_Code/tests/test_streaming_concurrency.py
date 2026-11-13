@@ -35,3 +35,4 @@ async def test_streaming_holds_concurrency_until_completion():
     # After consumption finishes, callback has fired and concurrency is 0
     assert limiter.active_concurrency == 0
     assert len(chunks) > 0
+

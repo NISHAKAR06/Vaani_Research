@@ -105,3 +105,12 @@ async def health():
         "circuit_breaker_state": _admission_controller.circuit_breaker.state.value
     }
 
+@router.get("/metrics")
+async def get_metrics():
+    return {
+        "active_concurrency": _admission_controller.active_concurrency,
+        "queue_length": _admission_controller.current_queue_length,
+        "peak_queue_length": _admission_controller.peak_queue_length,
+        "circuit_breaker_state": _admission_controller.circuit_breaker.state.value
+    }
+

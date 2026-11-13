@@ -59,3 +59,4 @@ async def test_queue_backpressure_rejection():
     await f1
     await f2
     await controller.close()
+

@@ -47,3 +47,4 @@ def test_results_tables_contain_honest_calibration():
     assert "Setting A (300 tokens, top-3, rerank: no) | 18" in content
     assert "Setting B (600 tokens, top-5, rerank: no) | 18" in content
     assert "Setting C (900 tokens, top-5, rerank: yes) | 18" in content
+

@@ -1,9 +1,3 @@
----
-noteId: "6e618140df6911f1a06925f0c8d49965"
-tags: []
-
----
-
 # The Relay — ML Systems Engineering Assignment
 **Vaani Research | ML Engineering Assessment**
 
@@ -67,8 +61,8 @@ The system is strictly bounded to exactly these three arXiv versions:
 
 ### Step 1: Clone Repository & Create Virtual Environment
 ```bash
-git clone https://github.com/your-repo/the-relay.git
-cd the-relay
+git clone https://github.com/NISHAKAR06/Vaani_Research.git
+cd Vaani_Research
 
 # Using uv (fastest)
 uv venv .venv --python 3.11
@@ -120,8 +114,8 @@ curl -X POST http://127.0.0.1:8000/query \
   -d "{\"query\": \"What scaling factor is used in scaled dot-product attention?\", \"retrieval_setting\": \"B\"}"
 ```
 
-### 4. Run Real Service Calibration
-Executes controlled requests against Groq to record observed latency and rate-limit headers:
+### 4. Run Real Service Calibration (Optional)
+Probes real Groq Cloud if `GROQ_API_KEY` is configured in `.env`. If not configured, records an unprobed baseline without fabricating data:
 ```bash
 python scripts/run_calibration.py
 ```

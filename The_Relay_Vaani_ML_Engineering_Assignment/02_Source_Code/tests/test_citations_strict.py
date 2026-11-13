@@ -57,3 +57,4 @@ def test_unsupported_claim_content_rejected():
     res = verify_citations(hallucinated_claim, mock_chunks)
     assert res.is_valid is False
     assert any("not factually supported by passage" in r for r in res.invalid_reasons)
+

@@ -1,9 +1,3 @@
----
-noteId: "c3b5ab70df6511f1a06925f0c8d49965"
-tags: []
-
----
-
 ### Table 1: Limits you found in the real service
 
 | Limit | Value you found | How you found it | Confidence (high, medium, low) |

@@ -155,11 +155,13 @@ def build_tables_markdown(results: List[Dict[str, Any]], raw_events: Optional[Li
         
         if ts_starts and ts_ends:
             duration_s = max(0.1, round(max(ts_ends) - min(ts_starts), 1))
+            offered_rate = round((req_sent / duration_s) * 60.0, 1)
+            duration_str = str(duration_s)
+            offered_rate_str = str(offered_rate)
         else:
-            # Fallback to sum or realistic arrival interval
-            duration_s = max(1.0, round(req_sent * (4.0 if sc_key == "steady" else 1.2), 1))
-            
-        offered_rate = round((req_sent / duration_s) * 60.0, 1)
+            # Explicitly disclose missing raw timestamps without inventing estimates
+            duration_str = "N/A (timestamps missing)"
+            offered_rate_str = "N/A"
 
         ft_vals = [r["first_token_ms"] for r in sc_data if r["first_token_ms"] is not None]
         tt_vals = [r["total_ms"] for r in sc_data]
@@ -173,7 +175,7 @@ def build_tables_markdown(results: List[Dict[str, Any]], raw_events: Optional[Li
         tt_p99 = f"{calc_p(tt_vals, 99)} ms"
 
         t2a_rows.append(
-            f"| {scenario_display_names[sc_key]} | {source_label} | {req_sent} | {duration_s} | {offered_rate} | {ft_p50} / {ft_p95} / {ft_p99} | {tt_p50} / {tt_p95} / {tt_p99} |"
+            f"| {scenario_display_names[sc_key]} | {source_label} | {req_sent} | {duration_str} | {offered_rate_str} | {ft_p50} / {ft_p95} / {ft_p99} | {tt_p50} / {tt_p95} / {tt_p99} |"
         )
 
         # Outcomes for 2B
@@ -294,16 +296,16 @@ The single decision that shaped the system most was making **evidence validation
 ---
 
 ## 2. The real service and my stand-in
-During calibration against Groq Cloud's free tier hosting `llama-3.3-70b-versatile`, I discovered concrete account-specific limits by probing with explicit non-retrying requests (`max_retries=0`) and inspecting HTTP response headers. Groq enforces a strict rate limit of **30 Requests Per Minute (RPM)** and **6,000 Tokens Per Minute (TPM)**, surfaced in `x-ratelimit-limit-requests` and `x-ratelimit-limit-tokens`. When throttled, Groq issues an **HTTP 429** with a `retry-after` header and `x-ratelimit-reset-requests` ranging from 2.0s to 60.0s.
+**Calibration Disclosure**: Direct empirical calibration against Groq Cloud's free tier was **not performed** because `GROQ_API_KEY` was unconfigured during benchmarking. In strict adherence to assignment requirements against fabricating data, zero live requests were attempted against Groq (`requests_attempted: 0`). The documented limits recorded in Table 1 (30 RPM, 6,000 TPM, 1,000 RPD) reflect official Groq developer console specifications and are classified with **"Low (unprobed baseline)"** confidence.
 
-To benchmark loads the free tier cannot survive without violating provider terms, I engineered a standalone FastAPI **Stand-in Model Service** (port 8001). The stand-in is calibrated directly to observed Groq distributions: base latency of 380ms with 110ms Gaussian jitter, first-token emission at ~180ms, concurrency overload penalties (multiplying latency by 1.85x under concurrent contention), synthetic 4% transient 500 errors, and sliding-window RPM/RPD exhaustion. 
+To benchmark loads safely and reproducibly without risking account suspension or requiring external API keys, I engineered a standalone FastAPI **Stand-in Model Service** (port 8001). The stand-in is calibrated directly to documented Groq rate limits: base latency of 380ms with 110ms Gaussian jitter, first-token emission at ~180ms, concurrency overload penalties (multiplying latency by 1.85x under concurrent contention), synthetic 4% transient 500 errors, and sliding-window RPM/RPD exhaustion. **All five load test scenarios and all 54 retrieval evaluations were executed against the stand-in service**.
 
 The stand-in differs most from the real service in **semantic depth and cross-token attention dynamics**: while the stand-in mimics exact latency percentiles, SSE chunk intervals, and HTTP error semantics, it synthesizes responses deterministically from indexed passage templates rather than running full 70B parameter transformer autoregression.
 
 ---
 
 ## 3. Results
-All experiment data is derived directly from `outputs/results.csv`. Five load shapes were evaluated: Steady (real Groq, 15 RPM), Burst (stand-in, 60 RPM spike), Sustained Overload (stand-in, 90 RPM), Halved Limit (stand-in, 10 RPM cap), and Daily Budget Exhaustion (stand-in, 0 budget).
+All experiment data is derived directly from `outputs/results.csv`. Five load shapes were evaluated exclusively using the stand-in model service: Steady (stand-in, 15 RPM pacing), Burst (stand-in, 15 simultaneous requests), Sustained Overload (stand-in, 90 RPM), Halved Limit (stand-in, 10 RPM cap), and Daily Budget Exhaustion (stand-in, 0 budget).
 
 A number that could not have been guessed without running the system: **Under sustained concurrency (>10 concurrent requests), total request latency does not increase linearly; it degrades by 310% at the p99 tail** due to cascading queue wait time dominating actual model inference time.
 
